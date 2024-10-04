@@ -16,14 +16,18 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v1
 
-    - name: Build and push Docker image
+    - name: Build Docker image
+      run: docker build -t nginx-static-website .
+
+    - name: Copy static files
       run: |
-        docker build -t nginx-static-website .
-        docker run --rm -v $(pwd)/src:/usr/share/nginx/html nginx-static-website
+        container_id=$(docker create nginx-static-website)
+        docker cp $container_id:/usr/share/nginx/html ./output
+        docker rm $container_id
 
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./src
+        publish_dir: ./output
         publish_branch: gh-pages
